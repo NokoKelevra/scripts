@@ -5,11 +5,13 @@ then
     echo "La sintaxis es: $0 archivo_csv carpeta_destino"
     echo
 else
+	# Creamos la carpeta destino si no existe
 	if [ ! -d $2 ]; then
-	mkdir $2
+		mkdir $2
 	fi
 	wildcard_file="$2/wildcard.txt"
 	domains_file="$2/domains.txt"
+	# Wildcards
 	if [ ! -f $wildcard_file ]
 	then
 			touch $wildcard_file
@@ -17,6 +19,7 @@ else
 			rm $wildcard_file
 			touch $wildcard_file
 	fi
+	# Dominios
 	if [ ! -f $domains_file ]
 	then
 			touch $domains_file
@@ -36,4 +39,6 @@ else
 			fi
 	   	fi
 	done < <(tail -n +2 $1)
+	cat $wildcard_file | sed 's/^..//' >> $domains_file		# Ponemos los wildcards sin * en dominios
+	sort -u $domains_file > $domains_file		# Quitamos repetidos en dominios
 fi
