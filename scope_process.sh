@@ -34,7 +34,7 @@ else
 		then
 			if [ $tipo == 'WILDCARD' ]
 			then
-				echo $dominio >> $wildcard_file
+				echo "${dominio:2}" >> $wildcard_file
 			else
 				echo $dominio >> $domains_file
 			fi
