@@ -34,13 +34,12 @@ else
 		then
 			if [ $tipo == 'WILDCARD' ]
 			then
-				echo "${dominio:2}" >> $wildcard_file
+				echo "${dominio:2}" >> $wildcard_file			# Ponemos los wildcards sin * 
 			else
 				echo $dominio >> $domains_file
 			fi
 	   	fi
 	done < <(tail -n +2 $1)
-	#cat $wildcard_file | sed 's/^..//' >> $domains_file		# Ponemos los wildcards sin * en dominios
-	cat $wildcard_file >> $domains_file
-	sort -u $domains_file > $domains_uniq_file		# Quitamos repetidos en dominios
+	cat $wildcard_file >> $domains_file 						# Añadimos los wildcartdds a dominios
+	sort -u $domains_file > $domains_uniq_file					# Quitamos repetidos en dominios
 fi
