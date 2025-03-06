@@ -40,7 +40,7 @@ else
 			fi
 	   	fi
 	done < <(tail -n +2 $1)
-	cat $wildcard_file | sed 's/^..//' >> $domains_file		# Ponemos los wildcards sin * en dominios
+	#cat $wildcard_file | sed 's/^..//' >> $domains_file		# Ponemos los wildcards sin * en dominios
 	
 	sort -u $domains_file > $domains_uniq_file		# Quitamos repetidos en dominios
 fi
