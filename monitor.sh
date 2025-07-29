@@ -28,3 +28,5 @@ ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head -n 6
 echo -e "${YELLOW}\n>> Recent Errors in System Logs: ${NC}"
 journalctl -p 3 -xb | tail -n 10
 echo -e "${GREEN}===== Monitoring Completed =====${NC}"
+
+##sudo apt-get install sysstat ifstat -y
