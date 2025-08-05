@@ -21,7 +21,11 @@ Herramientas necesarias:
 ./monitor.sh
 ```
 ## Scope Process (scope_process.sh)
+_Este script se ha desarrollado para extraer y separar los dominios, subdominios y wildcards de un archivo CSV de Scope de un programa de HackerOne. Obtendremos como resultado tres archivos que contendràn la información de wildcards, los dominios totales y los dominios sin repetición en el caso que pudieran existir._
 
+```
+./scope_process.sh <archivo_csv> <carpeta_destino>
+```
 ## Log Encendido (log_encendido.sh)
 
 ## Calculo encendido (calculo_encendido.sh)
