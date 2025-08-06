@@ -36,7 +36,8 @@ echo "[*] Procesando IPs con DL >= 3 desde $TOP_ATTACKERS"
 
 # Leer y procesar el archivo
 grep -v '^#' "$TOP_ATTACKERS" | while read -r ip dl _; do
-    if [ "$dl" -ge 3 ]; then
+    [[ -z "$ip" || "$ip" =~ ^# ]] && continue
+    if [[ "$dl" =~ ^[0-9]+$ && "$dl" -ge 3 ]]; then
         block_ip "$ip"
     fi
 done
