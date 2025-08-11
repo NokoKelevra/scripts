@@ -31,10 +31,10 @@ awk -F ':' '{print $(NF-1) ":" $NF}' "$OUT_RAW" | sort -u > "$OUT_CLEAN"
 # Notificación
 echo "WPA Cracking completado" | notify
 if [ -s "$OUT_CLEAN" ]; then
-  # Añadir contenido y eliminar duplicados
   cat "$OUT_CLEAN" >> "$OUT_TOTAL"
   sort -u "$OUT_TOTAL" -o "$OUT_TOTAL"
   cat $OUT_CLEAN | notify
 else
-  echo "[!] No se encontró ninguna contraseña válida." | notify
+  echo "[!] No se encontró ninguna contraseña válida." | notify --bulk
 fi
+
