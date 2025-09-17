@@ -27,9 +27,17 @@ _Este script se ha desarrollado para extraer y separar los dominios, subdominios
 ./scope_process.sh <archivo_csv> <carpeta_destino>
 ```
 ## Log Encendido (log_encendido.sh)
+_Crea un archivo y guarda en él un registro de tiempo cada intervalo de segundos que hemos definido, por defecto 10 segundos._
 
+```
+./log_encendido.sh
+```
 ## Calculo encendido (calculo_encendido.sh)
+_Calcula cuanto tiempo ha estado encendido un dispositivo. Se puede pasar un archivo por argumento para calcular el encendido en un momento concreto o, si se ejecuta sin argumento, calcula el último archivo de encendido. Este script va vinculado a los archivos generados por el script log_encendido._
 
+```
+./calculo_encendido.sh <archivo_log>
+```
 ## Escaneo PMKID (escaneo_PMKID_ciclos.sh)
 
 ## Crack WPA/PMKID (crack_wpa.sh)
