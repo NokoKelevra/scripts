@@ -1,45 +1,67 @@
 #!/bin/bash
+set -euo pipefail
+
+# Entorno mínimo para cron
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+
+# Logging
+LOGFILE="/var/log/psad_blocker.log"
+exec >> "$LOGFILE" 2>&1
+
+echo "=============================="
+echo "[INFO] Ejecución: $(date)"
 
 # Archivos y listas
 TOP_ATTACKERS="/var/log/psad/top_attackers"
 WHITELIST="/etc/psad/whitelist.txt"
 BLACKLIST="/etc/psad/blacklist.txt"
 
+# Comprobaciones básicas
+[[ -r "$TOP_ATTACKERS" ]] || { echo "[ERROR] No se puede leer $TOP_ATTACKERS"; exit 1; }
+
 # Crear archivos si no existen
 touch "$WHITELIST" "$BLACKLIST"
+chmod 644 "$WHITELIST" "$BLACKLIST"
 
-# Función para bloquear una IP si no está en whitelist o ya bloqueada
+# Función para bloquear una IP
 block_ip() {
-    local ip=$1
+    local ip="$1"
 
-    # Revisar si está en la whitelist
+    # Validación básica de IP (evita basura)
+    [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || {
+        echo "[WARN] IP inválida: $ip"
+        return
+    }
+
     if grep -Fxq "$ip" "$WHITELIST"; then
-        echo "[INFO] $ip está en la whitelist, se omite."
+        echo "[INFO] $ip en whitelist, se omite."
         return
     fi
 
-    # Revisar si ya está en la blacklist
     if grep -Fxq "$ip" "$BLACKLIST"; then
-        echo "[INFO] $ip ya está en la blacklist, se omite."
+        echo "[INFO] $ip ya en blacklist, se omite."
         return
     fi
 
-    # Bloquear IP (usando iptables, puedes cambiar a ipset si prefieres)
-    echo "[BLOQUEO] Bloqueando $ip..."
-    iptables -A INPUT -s "$ip" -j DROP
+    # Evitar reglas duplicadas en iptables
+    if /sbin/iptables -C INPUT -s "$ip" -j DROP 2>/dev/null; then
+        echo "[INFO] Regla iptables ya existe para $ip"
+    else
+        echo "[BLOQUEO] Bloqueando $ip"
+        /sbin/iptables -A INPUT -s "$ip" -j DROP
+    fi
 
-    # Guardar en la blacklist
     echo "$ip" >> "$BLACKLIST"
 }
 
-echo "[*] Procesando IPs con DL >= 3 desde $TOP_ATTACKERS"
+echo "[INFO] Procesando IPs con DL >= 3"
 
-# Leer y procesar el archivo
-grep -v '^#' "$TOP_ATTACKERS" | while read -r ip dl _; do
+# Procesar el archivo sin subshell
+while read -r ip dl _; do
     [[ -z "$ip" || "$ip" =~ ^# ]] && continue
     if [[ "$dl" =~ ^[0-9]+$ && "$dl" -ge 3 ]]; then
         block_ip "$ip"
     fi
-done
+done < <(grep -v '^#' "$TOP_ATTACKERS")
 
-echo "[✓] Proceso completado."
+echo "[OK] Proceso completado"
