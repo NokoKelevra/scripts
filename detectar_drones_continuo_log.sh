@@ -28,20 +28,24 @@ limpiar() {
         log "INFO" "airodump-ng detenido"
     fi
 
-    # Restaurar interfaz
     if [ -n "$MONITOR_IFACE" ]; then
         airmon-ng stop "$MONITOR_IFACE" >> "$LOG_SYS" 2>&1
         log "INFO" "Modo monitor desactivado"
     fi
 
-    # Restaurar servicios de red
-    log "INFO" "Reiniciando servicios de red"
+    log "INFO" "Restaurando servicios de red"
 
-    systemctl restart NetworkManager >> "$LOG_SYS" 2>&1 && \
-        log "INFO" "NetworkManager restaurado"
+    systemctl list-unit-files | grep -q NetworkManager && \
+        systemctl restart NetworkManager >> "$LOG_SYS" 2>&1 && \
+        log "INFO" "NetworkManager reiniciado"
 
-    systemctl restart wpa_supplicant >> "$LOG_SYS" 2>&1 && \
-        log "INFO" "wpa_supplicant restaurado"
+    systemctl list-unit-files | grep -q wpa_supplicant && \
+        systemctl restart wpa_supplicant >> "$LOG_SYS" 2>&1 && \
+        log "INFO" "wpa_supplicant reiniciado"
+
+    systemctl list-unit-files | grep -q dhcpcd && \
+        systemctl restart dhcpcd >> "$LOG_SYS" 2>&1 && \
+        log "INFO" "dhcpcd reiniciado"
 
     log "INFO" "Sistema restaurado correctamente"
     exit 0
@@ -85,18 +89,24 @@ if [ -z "$MONITOR_IFACE" ]; then
 fi
 
 log "INFO" "Interfaz monitor: $MONITOR_IFACE"
+log "DEBUG" "Interfaz usada para captura: $MONITOR_IFACE"
 
-# === TEST AIRODUMP ===
-log "INFO" "Verificando airodump-ng"
+# === TEST AIRODUMP (NO INTERACTIVO) ===
+log "INFO" "Verificando airodump-ng (modo no interactivo)"
 
-timeout 5 airodump-ng "$MONITOR_IFACE" >> "$LOG_SYS" 2>&1
+TEST_FILE="/tmp/test_airodump"
 
-if [ $? -ne 0 ]; then
-    log "ERROR" "airodump-ng no funciona correctamente"
+timeout 5 airodump-ng "$MONITOR_IFACE" \
+    --write "$TEST_FILE" --output-format csv \
+    >> "$LOG_SYS" 2>&1
+
+if ls "$TEST_FILE"*.csv >/dev/null 2>&1; then
+    log "INFO" "airodump-ng operativo"
+    rm -f "$TEST_FILE"*
+else
+    log "ERROR" "airodump-ng no genera datos"
     exit 1
 fi
-
-log "INFO" "airodump-ng operativo"
 
 # === CSV ===
 if [ ! -f "$LOG_FILE" ]; then
