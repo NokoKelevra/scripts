@@ -92,21 +92,18 @@ log "INFO" "Interfaz monitor: $MONITOR_IFACE"
 log "DEBUG" "Interfaz usada para captura: $MONITOR_IFACE"
 
 # === TEST AIRODUMP (NO INTERACTIVO) ===
-log "INFO" "Verificando airodump-ng (modo no interactivo)"
+log "INFO" "Verificando captura en interfaz (tcpdump)"
 
-TEST_FILE="/tmp/test_airodump"
+log "DEBUG" "Interfaz usada: $MONITOR_IFACE"
 
-timeout 5 airodump-ng "$MONITOR_IFACE" \
-    --write "$TEST_FILE" --output-format csv \
-    >> "$LOG_SYS" 2>&1
+timeout 5 tcpdump -i "$MONITOR_IFACE" > /dev/null 2>&1
 
-if ls "$TEST_FILE"*.csv >/dev/null 2>&1; then
-    log "INFO" "airodump-ng operativo"
-    rm -f "$TEST_FILE"*
-else
-    log "ERROR" "airodump-ng no genera datos"
+if [ $? -ne 0 ]; then
+    log "ERROR" "No se detecta tráfico en la interfaz"
     exit 1
 fi
+
+log "INFO" "Captura de paquetes OK"
 
 # === CSV ===
 if [ ! -f "$LOG_FILE" ]; then
