@@ -7,6 +7,7 @@ CAPTURE_FILE="drone_scan"
 LOG_FILE="detecciones_drones.csv"
 LOG_SYS="drone_detector.log"
 SLEEP_INTERVAL=15
+CLEANED_UP=0
 
 declare -A seen_macs
 
@@ -21,7 +22,14 @@ log() {
 
 # === LIMPIEZA ===
 limpiar() {
-    log "INFO" "Señal de salida recibida, limpiando entorno..."
+
+    # Evitar doble ejecución
+    if [ "$CLEANED_UP" -eq 1 ]; then
+        return
+    fi
+    CLEANED_UP=1
+
+    log "INFO" "Ejecutando limpieza del sistema..."
 
     if [ -n "$AIRDUMP_PID" ]; then
         kill "$AIRDUMP_PID" 2>/dev/null
@@ -36,19 +44,15 @@ limpiar() {
     log "INFO" "Restaurando servicios de red"
 
     systemctl list-unit-files | grep -q NetworkManager && \
-        systemctl restart NetworkManager >> "$LOG_SYS" 2>&1 && \
-        log "INFO" "NetworkManager reiniciado"
+        systemctl restart NetworkManager >> "$LOG_SYS" 2>&1
 
     systemctl list-unit-files | grep -q wpa_supplicant && \
-        systemctl restart wpa_supplicant >> "$LOG_SYS" 2>&1 && \
-        log "INFO" "wpa_supplicant reiniciado"
+        systemctl restart wpa_supplicant >> "$LOG_SYS" 2>&1
 
     systemctl list-unit-files | grep -q dhcpcd && \
-        systemctl restart dhcpcd >> "$LOG_SYS" 2>&1 && \
-        log "INFO" "dhcpcd reiniciado"
+        systemctl restart dhcpcd >> "$LOG_SYS" 2>&1
 
-    log "INFO" "Sistema restaurado correctamente"
-    exit 0
+    log "INFO" "Sistema restaurado"
 }
 
 # === VALIDACIONES ===
@@ -62,8 +66,10 @@ fi
 
 command -v airodump-ng >/dev/null || { log "ERROR" "airodump-ng no instalado"; exit 1; }
 command -v airmon-ng >/dev/null || { log "ERROR" "airmon-ng no instalado"; exit 1; }
+command -v tcpdump >/dev/null || { log "ERROR" "tcpdump no instalado"; exit 1; }
 
-trap limpiar SIGINT SIGTERM
+trap limpiar EXIT
+trap "exit 1" SIGINT SIGTERM
 
 log "INFO" "===== INICIO DETECTOR DE DRONES ====="
 
